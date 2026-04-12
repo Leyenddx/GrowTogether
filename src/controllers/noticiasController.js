@@ -25,7 +25,7 @@ const obtenerNoticias = async (req, res) => {
             SELECT n.*, u.nombre AS autor 
             FROM noticias n 
             JOIN usuarios u ON n.autor_id = u.id_numero_empleado 
-            ORDER BY n.fecha_publicacion DESC LIMIT 5
+            ORDER BY n.fecha_publicacion DESC, n.id DESC LIMIT 5
         `);
         res.status(200).json({ exito: true, data: noticias });
     } catch (error) {

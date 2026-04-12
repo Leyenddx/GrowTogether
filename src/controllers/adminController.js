@@ -51,13 +51,40 @@ const actualizarSolicitud = async (req, res) => {
     }
 };
 
-// Función 4: Obtener la lista de operadores activos (rol 3)
+// Función 4: Obtener la lista de operadores activos con matemáticas de vacaciones e historial
 const obtenerOperadores = async (req, res) => {
     try {
-        // Traemos el ID, nombre, correo y los días de vacaciones que les quedan
+        // Traemos a los operadores (rol 3)
         const [operadores] = await db.query(
             'SELECT id_numero_empleado, nombre, correo, dias_vacaciones FROM usuarios WHERE rol_id = 3'
         );
+
+        // Por cada operador, calculamos sus días reales y sacamos su historial
+        for (let op of operadores) {
+            const [solicitudes] = await db.query(
+                'SELECT tipo_permiso, fecha_inicio, fecha_fin FROM solicitudes_vacaciones WHERE usuario_id = ? AND estado_aprobacion = "Aprobado" ORDER BY fecha_inicio DESC',
+                [op.id_numero_empleado]
+            );
+
+            let diasGastados = 0;
+            
+            // Guardamos el historial para mandarlo al Frontend
+            op.historial_permisos = solicitudes;
+
+            // Calculamos cuántos días de "Vacaciones" ha gastado
+            solicitudes.forEach(sol => {
+                if (sol.tipo_permiso === 'Vacaciones') {
+                    const f1 = new Date(sol.fecha_inicio);
+                    const f2 = new Date(sol.fecha_fin);
+                    const diffDias = Math.ceil(Math.abs(f2 - f1) / (1000 * 60 * 60 * 24)) + 1;
+                    diasGastados += diffDias;
+                }
+            });
+
+            // Creamos una nueva variable con los días reales
+            op.dias_disponibles_reales = op.dias_vacaciones - diasGastados;
+        }
+
         res.status(200).json({ exito: true, data: operadores });
     } catch (error) {
         console.error('Error al obtener operadores:', error);
