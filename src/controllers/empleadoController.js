@@ -1,16 +1,13 @@
 const db = require('../config/db');
 
 const obtenerDashboardEmpleado = async (req, res) => {
-    const { id } = req.params; // Recibimos la nómina del empleado (ej. Juan)
+    const { id } = req.params;
 
     try {
-        // 1. Buscamos a su jefe (Por ahora tomaremos al primer Supervisor/Rol 2 que exista)
         const [jefe] = await db.query('SELECT nombre, correo FROM usuarios WHERE rol_id = 2 LIMIT 1');
         
-       // 2. Buscamos la noticia más reciente (Ordenada por ID para desempatar fechas)
         const [noticia] = await db.query('SELECT * FROM noticias ORDER BY fecha_publicacion DESC, id DESC LIMIT 1');
         
-        // 3. Buscamos su última postulación a vacante
         const [postulacion] = await db.query(`
             SELECT p.estado_postulacion, v.titulo 
             FROM postulaciones p 
@@ -18,14 +15,12 @@ const obtenerDashboardEmpleado = async (req, res) => {
             WHERE p.usuario_id = ? ORDER BY p.fecha DESC LIMIT 1
         `, [id]);
 
-        // 4. Buscamos su última solicitud de vacaciones
         const [tramite] = await db.query(`
             SELECT tipo_permiso, estado_aprobacion 
             FROM solicitudes_vacaciones 
             WHERE usuario_id = ? ORDER BY fecha_inicio DESC LIMIT 1
         `, [id]);
 
-        // Empaquetamos todo y lo enviamos
         res.status(200).json({
             exito: true,
             jefe: jefe[0] || null,
@@ -40,21 +35,18 @@ const obtenerDashboardEmpleado = async (req, res) => {
     }
 };
 
-// 2. Obtener vacantes y calcular el Match % (AHORA CON REVISIÓN DE POSTULACIONES)
 const obtenerVacantesMatch = async (req, res) => {
     const { id_empleado } = req.params;
 
     try {
         const [vacantes] = await db.query('SELECT * FROM vacantes WHERE estado_activa = TRUE');
         
-        // Obtenemos los requisitos
         const [misRequisitos] = await db.query(
             'SELECT nombre_requisito FROM requisitos_empleados WHERE usuario_id = ? AND estado_validacion = "Aprobado"', 
             [id_empleado]
         );
         const misReqNombres = misRequisitos.map(r => r.nombre_requisito);
 
-        // NUEVO: Obtenemos a cuáles vacantes ya se postuló este usuario
         const [misPostulaciones] = await db.query(
             'SELECT vacante_id FROM postulaciones WHERE usuario_id = ?', 
             [id_empleado]
@@ -66,7 +58,6 @@ const obtenerVacantesMatch = async (req, res) => {
             
             vacante.lista_requisitos = requisitosVacante;
             vacante.match_porcentaje = 0;
-            // NUEVO: Le ponemos una etiqueta si ya está postulado
             vacante.ya_postulado = misVacantesPostuladas.includes(vacante.id);
 
             if (requisitosVacante.length > 0) {
@@ -86,7 +77,6 @@ const obtenerVacantesMatch = async (req, res) => {
     }
 };
 
-// 3. Reportar un requisito nuevo (Se va a pendiente para que Ana lo apruebe)
 const reportarRequisito = async (req, res) => {
     const { usuario_id, nombre_requisito } = req.body;
     try {
@@ -100,18 +90,15 @@ const reportarRequisito = async (req, res) => {
     }
 };
 
-// 4. Obtener todos los datos del perfil
 const obtenerPerfil = async (req, res) => {
     const { id_empleado } = req.params;
 
     try {
-        // Obtenemos los datos básicos del usuario
         const [usuario] = await db.query(
             'SELECT nombre, correo, id_numero_empleado, foto_perfil, fecha_ingreso, planta, turno FROM usuarios WHERE id_numero_empleado = ?',
             [id_empleado]
         );
 
-        // Obtenemos sus certificaciones (Requisitos que Ana ya le aprobó)
         const [certificaciones] = await db.query(
             'SELECT nombre_requisito, fecha_registro FROM requisitos_empleados WHERE usuario_id = ? AND estado_validacion = "Aprobado"',
             [id_empleado]
@@ -128,7 +115,6 @@ const obtenerPerfil = async (req, res) => {
     }
 };
 
-// 5. Subir o actualizar foto de perfil
 const actualizarFotoPerfil = async (req, res) => {
     const { id_empleado } = req.body;
     const foto_url = req.file ? '/uploads/' + req.file.filename : null;
@@ -145,7 +131,6 @@ const actualizarFotoPerfil = async (req, res) => {
     }
 };
 
-// Tu module.exports se queda igual, hasta el final:
 module.exports = { 
     obtenerDashboardEmpleado, 
     obtenerVacantesMatch, 

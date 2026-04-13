@@ -1,10 +1,8 @@
 const db = require('../config/db');
 
 const crearNoticia = async (req, res) => {
-    // Cuando usamos Multer, los textos vienen en req.body y la foto en req.file
     const { autor_id, titulo, contenido } = req.body;
     
-    // Si subieron una foto, armamos la ruta. Si no, lo dejamos en null.
     const imagen_url = req.file ? '/uploads/' + req.file.filename : null;
 
     try {

@@ -1,7 +1,6 @@
 const mysql = require('mysql2/promise');
-require('dotenv').config(); // Esto lee tu archivo .env
+require('dotenv').config();
 
-// Crear un "Pool" de conexiones (mucho más rápido y seguro que una conexión simple)
 const pool = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -12,7 +11,6 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
-// Probar la conexión justo al iniciar
 pool.getConnection()
     .then(connection => {
         console.log('✅ Conexión exitosa a la base de datos MySQL (talento_eci)');

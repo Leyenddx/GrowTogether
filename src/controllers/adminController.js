@@ -1,6 +1,5 @@
 const db = require('../config/db');
 
-// Función 1: Resumen del Dashboard (Ya la tenías)
 const obtenerResumenAdmin = async (req, res) => {
     try {
         const [vacaciones] = await db.query("SELECT COUNT(*) as total_pendientes FROM solicitudes_vacaciones WHERE estado_aprobacion = 'Pendiente'");
@@ -12,17 +11,15 @@ const obtenerResumenAdmin = async (req, res) => {
             exito: true,
             pendientesVacaciones: vacaciones[0].total_pendientes,
             totalEmpleados: empleados[0].total_operadores,
-            pendientesRequisitos: requisitos[0].total_requisitos // Lo mandamos al Frontend
+            pendientesRequisitos: requisitos[0].total_requisitos 
         });
     } catch (error) {
         res.status(500).json({ exito: false, mensaje: 'Error interno del servidor' });
     }
 };
 
-// Función 2: ¡NUEVA! Obtener la lista de solicitudes pendientes
 const obtenerPendientes = async (req, res) => {
     try {
-        // Hacemos un JOIN para traer el nombre del empleado junto con su solicitud
         const [solicitudes] = await db.query(`
             SELECT s.id, s.fecha_inicio, s.fecha_fin, s.tipo_permiso, u.nombre, u.id_numero_empleado 
             FROM solicitudes_vacaciones s 
@@ -35,10 +32,9 @@ const obtenerPendientes = async (req, res) => {
     }
 };
 
-// Función 3: ¡NUEVA! Aprobar o Rechazar
 const actualizarSolicitud = async (req, res) => {
-    const { id } = req.params; // ID de la solicitud
-    const { estado, aprobador_id } = req.body; // 'Aprobado' o 'Rechazado'
+    const { id } = req.params; 
+    const { estado, aprobador_id } = req.body; 
 
     try {
         await db.query(
@@ -51,15 +47,12 @@ const actualizarSolicitud = async (req, res) => {
     }
 };
 
-// Función 4: Obtener la lista de operadores activos con matemáticas de vacaciones e historial
 const obtenerOperadores = async (req, res) => {
     try {
-        // Traemos a los operadores (rol 3)
         const [operadores] = await db.query(
             'SELECT id_numero_empleado, nombre, correo, dias_vacaciones FROM usuarios WHERE rol_id = 3'
         );
 
-        // Por cada operador, calculamos sus días reales y sacamos su historial
         for (let op of operadores) {
             const [solicitudes] = await db.query(
                 'SELECT tipo_permiso, fecha_inicio, fecha_fin FROM solicitudes_vacaciones WHERE usuario_id = ? AND estado_aprobacion = "Aprobado" ORDER BY fecha_inicio DESC',
@@ -68,10 +61,8 @@ const obtenerOperadores = async (req, res) => {
 
             let diasGastados = 0;
             
-            // Guardamos el historial para mandarlo al Frontend
             op.historial_permisos = solicitudes;
 
-            // Calculamos cuántos días de "Vacaciones" ha gastado
             solicitudes.forEach(sol => {
                 if (sol.tipo_permiso === 'Vacaciones') {
                     const f1 = new Date(sol.fecha_inicio);
@@ -81,7 +72,6 @@ const obtenerOperadores = async (req, res) => {
                 }
             });
 
-            // Creamos una nueva variable con los días reales
             op.dias_disponibles_reales = op.dias_vacaciones - diasGastados;
         }
 
@@ -92,7 +82,6 @@ const obtenerOperadores = async (req, res) => {
     }
 };
 
-// Función 5: Obtener los requisitos que los empleados dicen tener
 const obtenerRequisitosPendientes = async (req, res) => {
     try {
         const [requisitos] = await db.query(`
@@ -107,10 +96,9 @@ const obtenerRequisitosPendientes = async (req, res) => {
     }
 };
 
-// Función 6: Aprobar o Rechazar el requisito
 const validarRequisito = async (req, res) => {
     const { id } = req.params;
-    const { estado } = req.body; // 'Aprobado' o 'Rechazado'
+    const { estado } = req.body;
 
     try {
         await db.query('UPDATE requisitos_empleados SET estado_validacion = ? WHERE id = ?', [estado, id]);
