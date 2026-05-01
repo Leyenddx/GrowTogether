@@ -4,16 +4,20 @@ const obtenerDashboardEmpleado = async (req, res) => {
     const { id } = req.params;
 
     try {
+
         const [jefe] = await db.query('SELECT nombre, correo FROM usuarios WHERE rol_id = 2 LIMIT 1');
         
+
         const [noticia] = await db.query('SELECT * FROM noticias ORDER BY fecha_publicacion DESC, id DESC LIMIT 1');
         
+
         const [postulacion] = await db.query(`
             SELECT p.estado_postulacion, v.titulo 
             FROM postulaciones p 
             JOIN vacantes v ON p.vacante_id = v.id 
             WHERE p.usuario_id = ? ORDER BY p.fecha DESC LIMIT 1
         `, [id]);
+
 
         const [tramite] = await db.query(`
             SELECT tipo_permiso, estado_aprobacion 
@@ -30,10 +34,11 @@ const obtenerDashboardEmpleado = async (req, res) => {
         });
 
     } catch (error) {
-        console.error(error);
+        console.error("Error en Dashboard:", error);
         res.status(500).json({ exito: false, mensaje: 'Error al cargar el inicio' });
     }
 };
+
 
 const obtenerVacantesMatch = async (req, res) => {
     const { id_empleado } = req.params;
@@ -77,18 +82,24 @@ const obtenerVacantesMatch = async (req, res) => {
     }
 };
 
+
 const reportarRequisito = async (req, res) => {
-    const { usuario_id, nombre_requisito } = req.body;
+
+    const { id_empleado, nombre_requisito } = req.body; 
+
     try {
+
         await db.query(
             'INSERT INTO requisitos_empleados (usuario_id, nombre_requisito, estado_validacion, fecha_registro) VALUES (?, ?, "Pendiente", CURDATE())',
-            [usuario_id, nombre_requisito]
+            [id_empleado, nombre_requisito]
         );
-        res.status(200).json({ exito: true, mensaje: 'Enviado a validación' });
+        res.status(200).json({ exito: true, mensaje: 'Certificación enviada a validación' });
     } catch (error) {
-        res.status(500).json({ exito: false, mensaje: 'Error al reportar requisito' });
+        console.error("Error al reportar requisito:", error);
+        res.status(500).json({ exito: false, mensaje: 'Error al procesar la solicitud' });
     }
 };
+
 
 const obtenerPerfil = async (req, res) => {
     const { id_empleado } = req.params;
@@ -115,6 +126,7 @@ const obtenerPerfil = async (req, res) => {
     }
 };
 
+
 const actualizarFotoPerfil = async (req, res) => {
     const { id_empleado } = req.body;
     const foto_url = req.file ? '/uploads/' + req.file.filename : null;
@@ -127,16 +139,9 @@ const actualizarFotoPerfil = async (req, res) => {
         await db.query('UPDATE usuarios SET foto_perfil = ? WHERE id_numero_empleado = ?', [foto_url, id_empleado]);
         res.status(200).json({ exito: true, mensaje: 'Foto actualizada con éxito', foto_url });
     } catch (error) {
+        console.error("Error al actualizar foto:", error);
         res.status(500).json({ exito: false, mensaje: 'Error al actualizar foto' });
     }
-};
-
-module.exports = { 
-    obtenerDashboardEmpleado, 
-    obtenerVacantesMatch, 
-    reportarRequisito, 
-    obtenerPerfil, 
-    actualizarFotoPerfil 
 };
 
 module.exports = { 
