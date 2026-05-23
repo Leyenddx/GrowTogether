@@ -10,7 +10,7 @@ app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
 app.get('/', (req, res) => {
-    res.send('🚀 API de Gestión de Talento ECI funcionando al 100%');
+    res.send('API de Gestión de Talento ECI funcionando al 100%');
 });
 
 const vacantesRoutes = require('./routes/vacantesRoutes');

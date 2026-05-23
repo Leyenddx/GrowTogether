@@ -13,11 +13,11 @@ const pool = mysql.createPool({
 
 pool.getConnection()
     .then(connection => {
-        console.log('✅ Conexión exitosa a la base de datos MySQL (talento_eci)');
+        console.log('Conexión exitosa a la base de datos MySQL (talento_eci)');
         connection.release();
     })
     .catch(err => {
-        console.error('❌ Error al conectar a la base de datos:', err.message);
+        console.error('Error al conectar a la base de datos:', err.message);
     });
 
 module.exports = pool;
