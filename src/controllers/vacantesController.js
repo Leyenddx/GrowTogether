@@ -143,6 +143,37 @@ const obtenerMisPostulaciones = async (req, res) => {
     }
 };
 
+const editarVacante = async (req, res) => {
+    const { id } = req.params;
+    const { titulo, descripcion, planta, turno, fecha_limite, requisitos } = req.body;
+
+    try {
+        
+        await db.query(
+            'UPDATE vacantes SET titulo = ?, descripcion = ?, planta = ?, turno = ?, fecha_limite = ? WHERE id = ?',
+            [titulo, descripcion, planta, turno, fecha_limite, id]
+        );
+
+        
+        await db.query('DELETE FROM vacante_requisitos WHERE vacante_id = ?', [id]);
+
+        
+        if (requisitos && requisitos.length > 0) {
+            for (let reqTexto of requisitos) {
+                await db.query(
+                    'INSERT INTO vacante_requisitos (vacante_id, requisito) VALUES (?, ?)',
+                    [id, reqTexto]
+                );
+            }
+        }
+
+        res.status(200).json({ exito: true, mensaje: '¡Vacante actualizada!' });
+    } catch (error) {
+        console.error('Error al editar la vacante:', error);
+        res.status(500).json({ exito: false, mensaje: 'Error al intentar actualizar la vacante' });
+    }
+};
+
 
 module.exports = { 
     obtenerVacantes, 
@@ -153,5 +184,6 @@ module.exports = {
     obtenerPostulaciones,
     aprobarPostulacion,
     rechazarPostulacion,
-    obtenerMisPostulaciones
+    obtenerMisPostulaciones,
+    editarVacante 
 };

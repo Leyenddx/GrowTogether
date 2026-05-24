@@ -12,6 +12,6 @@ router.put('/postulaciones/aprobar/:id', vacantesController.aprobarPostulacion);
 router.put('/postulaciones/rechazar/:id', vacantesController.rechazarPostulacion);
 router.get('/mis-postulaciones/:id_empleado', vacantesController.obtenerMisPostulaciones);
 
-router.get('/mis-postulaciones/:id_empleado', vacantesController.obtenerMisPostulaciones);
+router.put('/editar/:id', vacantesController.editarVacante);
 
 module.exports = router;
