@@ -119,8 +119,13 @@ const aprobarPostulacion = async (req, res) => {
 
 const rechazarPostulacion = async (req, res) => {
     const { id } = req.params;
+    const { motivo } = req.body; // Recibimos el motivo de rechazo desde el frontend
+
     try {
-        await db.query('UPDATE postulaciones SET estado_postulacion = "Rechazado" WHERE id = ?', [id]);
+        await db.query(
+            'UPDATE postulaciones SET estado_postulacion = "Rechazado", motivo_rechazo = ? WHERE id = ?', 
+            [motivo || 'No se especificó un motivo.', id]
+        );
         res.status(200).json({ exito: true, mensaje: 'Candidato Rechazado.' });
     } catch (error) {
         res.status(500).json({ exito: false, mensaje: 'Error al rechazar candidato.' });
@@ -131,7 +136,7 @@ const obtenerMisPostulaciones = async (req, res) => {
     const { id_empleado } = req.params;
     try {
         const [misPostulaciones] = await db.query(`
-            SELECT p.fecha, p.estado_postulacion, v.titulo, v.planta
+            SELECT p.fecha, p.estado_postulacion, p.motivo_rechazo, v.titulo, v.planta
             FROM postulaciones p
             JOIN vacantes v ON p.vacante_id = v.id
             WHERE p.usuario_id = ?

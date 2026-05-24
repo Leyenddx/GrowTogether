@@ -34,12 +34,12 @@ const obtenerPendientes = async (req, res) => {
 
 const actualizarSolicitud = async (req, res) => {
     const { id } = req.params; 
-    const { estado, aprobador_id } = req.body; 
+    const { estado, aprobador_id, motivo } = req.body; // se agrega el motivo
 
     try {
         await db.query(
-            'UPDATE solicitudes_vacaciones SET estado_aprobacion = ?, aprobador_id = ? WHERE id = ?',
-            [estado, aprobador_id, id]
+            'UPDATE solicitudes_vacaciones SET estado_aprobacion = ?, aprobador_id = ?, motivo_rechazo = ? WHERE id = ?',
+            [estado, aprobador_id, motivo || null, id]
         );
         res.status(200).json({ exito: true, mensaje: `Solicitud ${estado} correctamente` });
     } catch (error) {
